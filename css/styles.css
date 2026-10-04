@@ -377,3 +377,26 @@ html, body {
   padding: 5px 7px;
   font-size: 1.2rem;
 }
+
+
+/* Favorits i historial */
+.favorite-btn {
+  margin-left: auto;
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: #a0aec0;
+  font-size: 1.35rem;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+.favorite-btn.is-favorite { color: #d69e2e; }
+.empty-icon { font-size: 3rem; opacity: .35; margin-bottom: 10px; }
+.history-actions { display:flex; justify-content:flex-end; margin-bottom:10px; }
+.clear-history { border:1px solid var(--border); background:white; color:var(--text-muted); border-radius:8px; padding:7px 10px; font-size:.75rem; }
+.history-item { width:100%; display:flex; align-items:center; gap:12px; text-align:left; border:1px solid var(--border); background:white; border-radius:10px; padding:12px; margin-bottom:8px; color:var(--text); }
+.history-item span:first-child { font-size:1.1rem; }
+.history-item span:last-child { display:flex; flex-direction:column; min-width:0; }
+.history-item strong { font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.history-item small { color:var(--text-muted); font-size:.7rem; margin-top:2px; }
