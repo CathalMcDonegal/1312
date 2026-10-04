@@ -60,7 +60,11 @@ function renderFavorites() {
     return;
   }
   panel.innerHTML = `<div class="results-count">${items.length} article${items.length !== 1 ? 's' : ''} favorit${items.length !== 1 ? 's' : ''}</div>` + items.map(item => articleCard(item)).join('');
-  panel.querySelectorAll('[data-favorite]').forEach(btn => btn.addEventListener('click', () => toggleFavorite(btn.dataset.favorite)));
+  panel.querySelectorAll('[data-favorite]').forEach(btn => btn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleFavorite(btn.dataset.favorite);
+  }));
+  bindArticleCards(panel);
 }
 function renderHistory() {
   const panel = document.getElementById('historial');
@@ -80,8 +84,68 @@ function renderHistory() {
 }
 function articleCard(item) {
   const star = isFavorite(item.id) ? '★' : '☆';
-  const source = item.source ? `<a class="source-link" href="${escapeHtml(item.source)}" target="_blank" rel="noopener noreferrer">Font oficial BOE ↗</a>` : '';
-  return `<div class="card"><div class="card-header"><span class="article-num">Art. ${escapeHtml(item.article)}</span><span class="card-title">${escapeHtml(item.title)}</span><button class="favorite-btn ${isFavorite(item.id) ? 'is-favorite' : ''}" type="button" data-favorite="${escapeHtml(item.id)}" aria-label="${isFavorite(item.id) ? 'Treure dels favorits' : 'Afegir als favorits'}">${star}</button></div><p class="card-summary">${escapeHtml(item.summary || item.text || '')}</p>${source}</div>`;
+  const source = item.source ? `<a class="source-link" href="${escapeHtml(item.source)}" target="_blank" rel="noopener noreferrer">Font oficial ↗</a>` : '';
+  return `<article class="card article-card" data-article-id="${escapeHtml(item.id)}" tabindex="0" role="button" aria-label="Obrir l'article ${escapeHtml(item.article)}">
+    <div class="card-header">
+      <span class="article-num">Art. ${escapeHtml(item.article)}</span>
+      <span class="card-title">${escapeHtml(item.title)}</span>
+      <button class="favorite-btn ${isFavorite(item.id) ? 'is-favorite' : ''}" type="button" data-favorite="${escapeHtml(item.id)}" aria-label="${isFavorite(item.id) ? 'Treure dels favorits' : 'Afegir als favorits'}">${star}</button>
+    </div>
+    <p class="card-summary">${escapeHtml(item.summary || item.text || '')}</p>
+    <div class="card-more">Toca per veure el text complet →</div>
+    ${source}
+  </article>`;
+}
+
+let lastArticleList = [];
+let lastArticlePanel = null;
+
+function openArticle(id) {
+  const item = findArticle(id);
+  const panel = document.getElementById(document.querySelector('.tab.active')?.dataset.tab);
+  if (!item || !panel) return;
+
+  lastArticlePanel = panel.id;
+  const currentCards = Array.from(panel.querySelectorAll('[data-article-id]'))
+    .map(card => findArticle(card.dataset.articleId)).filter(Boolean);
+  if (currentCards.length) lastArticleList = currentCards;
+
+  const source = item.source ? `<a class="source-link" href="${escapeHtml(item.source)}" target="_blank" rel="noopener noreferrer">Font oficial ↗</a>` : '';
+  const fullText = item.text || item.summary || 'No hi ha text complet disponible per a aquest article.';
+  panel.innerHTML = `
+    <button class="article-back" type="button">← Tornar als resultats</button>
+    <article class="article-detail">
+      <div class="article-detail-header">
+        <span class="article-num">Art. ${escapeHtml(item.article)}</span>
+        <button class="favorite-btn ${isFavorite(item.id) ? 'is-favorite' : ''}" type="button" data-favorite="${escapeHtml(item.id)}" aria-label="${isFavorite(item.id) ? 'Treure dels favorits' : 'Afegir als favorits'}">${isFavorite(item.id) ? '★' : '☆'}</button>
+      </div>
+      <h2>${escapeHtml(item.title)}</h2>
+      <div class="article-detail-text">${escapeHtml(fullText).replace(/\n/g, '<br>')}</div>
+      ${source}
+    </article>`;
+
+  panel.querySelector('.article-back').addEventListener('click', () => renderList(lastArticlePanel, lastArticleList));
+  panel.querySelector('[data-favorite]')?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleFavorite(item.id);
+    openArticle(item.id);
+  });
+  panel.scrollTop = 0;
+}
+
+function bindArticleCards(panel) {
+  panel.querySelectorAll('[data-article-id]').forEach(card => {
+    card.addEventListener('click', (event) => {
+      if (event.target.closest('[data-favorite], a')) return;
+      openArticle(card.dataset.articleId);
+    });
+    card.addEventListener('keydown', (event) => {
+      if ((event.key === 'Enter' || event.key === ' ') && !event.target.closest('[data-favorite]')) {
+        event.preventDefault();
+        openArticle(card.dataset.articleId);
+      }
+    });
+  });
 }
 
 
