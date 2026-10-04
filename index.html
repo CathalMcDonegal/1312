@@ -10,9 +10,23 @@
   <title>Normativa Penal BCN</title>
   <link rel="icon" href="logo.png">
   <link rel="apple-touch-icon" href="logo.png">
+  <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <div class="install-fixed" id="installFixed" hidden>
+    <button id="installAppBtn" type="button" aria-label="Instal·lar l'aplicació">📲</button>
+  </div>
+
+  <div class="update-banner" id="updateBanner" hidden>
+    <div class="update-message">
+      <strong>🔄 Nova actualització disponible</strong>
+      <span>Hi ha una nova versió de Normativa Penal BCN.</span>
+    </div>
+    <button id="updateAppBtn" type="button">Actualitzar</button>
+    <button id="dismissUpdateBtn" type="button" aria-label="Tancar">×</button>
+  </div>
+
   <div class="app">
     <header class="header">
       <div class="header-brand">
