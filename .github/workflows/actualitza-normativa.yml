@@ -25,7 +25,7 @@ jobs:
           python-version: "3.x"
 
       - name: Instal·lar dependència
-        run: python -m pip install beautifulsoup4
+        run: python -m pip install beautifulsoup4 pypdf
 
       - name: Generar normativa oficial
         run: python scripts/genera_normativa.py
