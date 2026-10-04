@@ -1,4 +1,4 @@
-const CACHE_NAME = 'normativa-penal-bcn-v3';
+const CACHE_NAME = 'normativa-penal-bcn-v4';
 
 const APP_SHELL = [
   './',
@@ -6,8 +6,7 @@ const APP_SHELL = [
   './css/styles.css',
   './js/app.js',
   './manifest.json',
-  './logo.png',
-  './data/normativa-oficial.json'
+  './logo.png'
 ];
 
 self.addEventListener('install', (event) => {
