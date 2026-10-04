@@ -16,31 +16,14 @@ let data = {
 const panelIds = ['codi-penal', 'lecrim', 'circulacio', 'ordenanca', 'seguretat', 'jurisprudencia'];
 
 // Carregar dades
-async function loadData() {
-  try {
-    const [cp, le, circ, ord, sc] = await Promise.all([
-      fetch('data/codi-penal.json').then(r => r.json()),
-      fetch('data/lecrim.json').then(r => r.json()),
-      fetch('data/circulacio.json').then(r => r.json()),
-      fetch('data/ordenanca.json').then(r => r.json()),
-      fetch('data/seguretat.json').then(r => r.json())
-    ]);
-    data['codi-penal'] = cp;
-    data['lecrim'] = le;
-    data['circulacio'] = circ;
-    data['ordenanca'] = ord;
-    data['seguretat'] = sc;
+function loadData() {
+  data['codi-penal'] = DATA_CP || [];
+  data['lecrim'] = typeof DATA_LE !== 'undefined' ? DATA_LE : [];
+  data['circulacio'] = typeof DATA_CIRC !== 'undefined' ? DATA_CIRC : [];
+  data['ordenanca'] = DATA_ORD || [];
+  data['seguretat'] = DATA_SC || [];
 
-    // Renderitzar totes les llistes inicials
-    panelIds.slice(0, 5).forEach(id => renderList(id, data[id]));
-  } catch (err) {
-    console.error('Error carregant dades:', err);
-    document.querySelectorAll('.content .panel').forEach(p => {
-      if (p.id !== 'jurisprudencia') {
-        p.innerHTML = '<div class="no-results"><p>Error carregant les dades. Comprova la connexió o recarrega la pàgina.</p></div>';
-      }
-    });
-  }
+  panelIds.slice(0, 5).forEach(id => renderList(id, data[id]));
 }
 
 // Canviar de pestanya
@@ -75,6 +58,23 @@ function getPlaceholder(tabId) {
   return placeholders[tabId] || 'Cerca...';
 }
 
+function normalizeText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // Renderitzar llista d'articles
 function renderList(panelId, items) {
   const panel = document.getElementById(panelId);
@@ -94,10 +94,10 @@ function renderList(panelId, items) {
     html += `
       <div class="card">
         <div class="card-header">
-          <span class="article-num">Art. ${item.article}</span>
-          <span class="card-title">${item.title}</span>
+          <span class="article-num">Art. ${escapeHtml(item.article)}</span>
+          <span class="card-title">${escapeHtml(item.title)}</span>
         </div>
-        <p class="card-summary">${item.summary}</p>
+        <p class="card-summary">${escapeHtml(item.summary)}</p>
       </div>`;
   });
   panel.innerHTML = html;
@@ -106,25 +106,23 @@ function renderList(panelId, items) {
 // Cercar
 function handleSearch(query) {
   const activeTab = document.querySelector('.tab.active').dataset.tab;
+  if (activeTab === 'jurisprudencia') return;
 
-  if (activeTab === 'jurisprudencia') {
-    return;
-  }
-
-  const q = query.trim().toLowerCase();
+  const q = normalizeText(query);
   if (!q) {
     renderList(activeTab, data[activeTab]);
     return;
   }
 
+  const terms = q.split(/\s+/).filter(Boolean);
   const filtered = data[activeTab].filter(item => {
-    const searchText = (
-      item.article + ' ' +
-      item.title + ' ' +
-      item.summary + ' ' +
-      (item.keywords || []).join(' ')
-    ).toLowerCase();
-    return searchText.includes(q);
+    const searchText = normalizeText([
+      item.article,
+      item.title,
+      item.summary,
+      ...(item.keywords || [])
+    ].join(' '));
+    return terms.every(term => searchText.includes(term));
   });
 
   renderList(activeTab, filtered);
