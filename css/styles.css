@@ -400,3 +400,14 @@ html, body {
 .history-item span:last-child { display:flex; flex-direction:column; min-width:0; }
 .history-item strong { font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .history-item small { color:var(--text-muted); font-size:.7rem; margin-top:2px; }
+
+
+.source-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--primary-light);
+  text-decoration: none;
+}
+.source-link:active { text-decoration: underline; }
