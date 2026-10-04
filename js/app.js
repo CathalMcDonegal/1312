@@ -524,3 +524,201 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 })();
+
+
+/* ====== UI 1312 — vista compacta, català i navegació interna ====== */
+function getCatalanFallback(item) {
+  const sources = {
+    'codi-penal': typeof DATA_CP !== 'undefined' ? DATA_CP : [],
+    'lecrim': typeof DATA_LE !== 'undefined' ? DATA_LE : [],
+    'circulacio': typeof DATA_CIRC !== 'undefined' ? DATA_CIRC : [],
+    'ordenanca': typeof DATA_ORD !== 'undefined' ? DATA_ORD : [],
+    'seguretat': typeof DATA_SC !== 'undefined' ? DATA_SC : []
+  };
+  const list = sources[item.section] || [];
+  return list.find(x => String(x.article).toLowerCase() === String(item.article).toLowerCase()) || null;
+}
+
+function visibleArticle(raw) {
+  const ca = getCatalanFallback(raw);
+  if (ca) return Object.assign({}, raw, {
+    title: ca.title || raw.title,
+    summary: ca.summary || '',
+    text: ca.text || ca.summary || '',
+    keywords: ca.keywords || raw.keywords || []
+  });
+  return Object.assign({}, raw, {
+    title: /^Article\s/i.test(String(raw.title || '')) ? raw.title : ('Article ' + raw.article),
+    summary: '',
+    text: '',
+    keywords: raw.keywords || []
+  });
+}
+
+function shortText(value, max) {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  max = max || 190;
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const end = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('; '), cut.lastIndexOf(', '));
+  return (end > max * 0.55 ? cut.slice(0, end) : cut).trim() + '…';
+}
+
+function articleCard(rawItem) {
+  const item = visibleArticle(rawItem);
+  const star = isFavorite(item.id) ? '★' : '☆';
+  const source = item.source ? '<a class="source-link" href="' + escapeHtml(item.source) + '" target="_blank" rel="noopener noreferrer">Font: oficial ↗</a>' : '';
+  const summary = shortText(item.summary, 190);
+  const penalty = extractPenalty(item);
+  return '<article class="card article-card" data-article-id="' + escapeHtml(item.id) + '" tabindex="0" role="button">' +
+    '<div class="card-header"><span class="article-num">Art. ' + escapeHtml(item.article) + '</span><span class="card-title">' + escapeHtml(item.title) + '</span>' +
+    '<button class="favorite-btn ' + (isFavorite(item.id) ? 'is-favorite' : '') + '" type="button" data-favorite="' + escapeHtml(item.id) + '" aria-label="' + (isFavorite(item.id) ? 'Treure dels favorits' : 'Afegir als favorits') + '">' + star + '</button></div>' +
+    (summary ? '<div class="card-section-label">Resum</div><p class="card-summary">' + escapeHtml(summary) + '</p>' : '<p class="card-summary card-no-summary">Article disponible a la font oficial.</p>') +
+    (penalty ? '<div class="card-section-label penalty-label">Penes</div><p class="card-penalty">' + escapeHtml(shortText(penalty, 130)) + '</p>' : '') +
+    '<div class="card-more">Obrir fitxa →</div>' + source + '</article>';
+}
+
+function renderList(panelId, items, options) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  if (!items || !items.length) {
+    panel.innerHTML = '<div class="no-results"><p>No s’han trobat resultats.<br>Prova amb una altra paraula clau.</p></div>';
+    return;
+  }
+
+  if (options && options.initial) {
+    const visible = items.slice(0, 35);
+    panel.innerHTML = '<div class="index-intro"><strong>Índex d’articles</strong><span>' +
+      items.length + ' articles disponibles. Utilitza el cercador per trobar-ne qualsevol.</span></div>' +
+      '<div class="index-list">' +
+      visible.map(function(raw) {
+        const item = visibleArticle(raw);
+        return '<button class="index-item" type="button" data-article-id="' + escapeHtml(item.id) + '">' +
+          '<span>Art. ' + escapeHtml(item.article) + '</span><strong>' + escapeHtml(item.title) + '</strong></button>';
+      }).join('') + '</div>' +
+      (items.length > visible.length ? '<div class="index-more">Hi ha ' + (items.length - visible.length) + ' articles més. Cerca per número, títol o concepte.</div>' : '');
+    bindArticleCards(panel);
+    return;
+  }
+
+  panel.innerHTML = '<div class="results-count">' + items.length + ' resultat' + (items.length !== 1 ? 's' : '') + '</div>' +
+    items.map(articleCard).join('');
+  panel.querySelectorAll('[data-favorite]').forEach(function(btn) {
+    btn.addEventListener('click', function(event) {
+      event.stopPropagation();
+      toggleFavorite(btn.dataset.favorite);
+    });
+  });
+  bindArticleCards(panel);
+}
+
+function openArticle(id, push) {
+  const raw = findArticle(id);
+  const item = raw ? visibleArticle(raw) : null;
+  const panel = document.getElementById(document.querySelector('.tab.active')?.dataset.tab);
+  if (!item || !panel) return;
+
+  lastArticlePanel = panel.id;
+  const currentCards = Array.from(panel.querySelectorAll('[data-article-id]')).map(function(card) {
+    return findArticle(card.dataset.articleId);
+  }).filter(Boolean);
+  if (currentCards.length) lastArticleList = currentCards;
+
+  if (push !== false) history.pushState({tab: panel.id, view: 'article', id: item.id}, '', location.href);
+
+  const source = item.source ? '<a class="source-link" href="' + escapeHtml(item.source) + '" target="_blank" rel="noopener noreferrer">Font: oficial ↗</a>' : '';
+  const content = item.text || item.summary
+    ? escapeHtml(item.text || item.summary).split(/\n+/).map(function(p) { return '<p>' + p.trim() + '</p>'; }).join('')
+    : '<p class="detail-notice">Aquest article està disponible a la base normativa oficial. La fitxa catalana resumida encara no incorpora el redactat íntegre.</p>';
+
+  panel.innerHTML = '<button class="article-back" type="button">← Tornar</button>' +
+    '<article class="article-detail"><div class="article-detail-header">' +
+    '<div class="article-heading"><span class="article-label">ARTICLE</span><span class="article-number-large">' + escapeHtml(item.article) + '</span></div>' +
+    '<button class="favorite-btn ' + (isFavorite(item.id) ? 'is-favorite' : '') + '" type="button" data-favorite="' + escapeHtml(item.id) + '">' + (isFavorite(item.id) ? '★' : '☆') + '</button></div>' +
+    '<h2>' + escapeHtml(item.title) + '</h2><div class="article-detail-divider"></div>' +
+    '<div class="article-detail-text">' + content + '</div>' + source + '</article>';
+
+  panel.querySelector('.article-back').addEventListener('click', function() { history.back(); });
+  panel.querySelector('[data-favorite]')?.addEventListener('click', function(event) {
+    event.stopPropagation();
+    toggleFavorite(item.id);
+    openArticle(item.id, false);
+  });
+  panel.scrollTop = 0;
+}
+
+function switchTab(tabId, push) {
+  const tab = document.querySelector('.tab[data-tab="' + tabId + '"]');
+  const panel = document.getElementById(tabId);
+  if (!tab || !panel) return;
+
+  if (push !== false) history.pushState({tab: tabId, view: 'list'}, '', location.href);
+
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  tab.classList.add('active');
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  panel.classList.add('active');
+
+  const input = document.getElementById('search-input');
+  if (tabId === 'actualitzacions') {
+    input.placeholder = 'Informació de normativa i actualitzacions';
+    input.value = '';
+    renderUpdates();
+  } else if (tabId === 'jurisprudencia') {
+    input.placeholder = 'Cerca jurisprudència (ex: violència de gènere, furt...)';
+    input.value = '';
+  } else if (tabId === 'favorits') {
+    input.placeholder = 'Els teus articles favorits';
+    input.value = '';
+    renderFavorites();
+  } else if (tabId === 'historial') {
+    input.placeholder = 'Cerques recents';
+    input.value = '';
+    renderHistory();
+  } else {
+    input.placeholder = getPlaceholder(tabId);
+    input.value = '';
+    renderList(tabId, data[tabId], {initial: true});
+  }
+}
+
+/* Cerca: conserva la base oficial per trobar qualsevol article, però mostra sempre la fitxa catalana disponible. */
+function handleSearch(query, record) {
+  const activeTab = document.querySelector('.tab.active')?.dataset.tab;
+  if (!activeTab || activeTab === 'jurisprudencia' || activeTab === 'favorits' || activeTab === 'historial' || activeTab === 'actualitzacions') return;
+
+  const q = normalizeText(query);
+  if (!q) {
+    renderList(activeTab, data[activeTab], {initial: true});
+    return;
+  }
+  if (record !== false) addHistory(query, activeTab);
+
+  const terms = q.split(/\s+/).filter(Boolean);
+  const filtered = data[activeTab].filter(function(item) {
+    const ca = getCatalanFallback(item);
+    const searchText = normalizeText([item.article, item.title, item.summary, item.text, ca?.title || '', ca?.summary || '', ...(item.keywords || []), ...(ca?.keywords || [])].join(' '));
+    return terms.every(function(term) {
+      return expandSearchTerm(term).some(function(candidate) { return searchText.includes(candidate); });
+    });
+  });
+  renderList(activeTab, filtered, {search: true});
+}
+
+/* Historial del navegador: enrere entre fitxes, cerques i pestanyes, sense sortir de la PWA. */
+document.addEventListener('DOMContentLoaded', function() {
+  history.replaceState({tab: 'codi-penal', view: 'list'}, '', location.href);
+  history.pushState({tab: 'codi-penal', view: 'list'}, '', location.href);
+
+  window.addEventListener('popstate', function(event) {
+    const state = event.state || {tab: 'codi-penal', view: 'list'};
+    if (state.view === 'article' && state.id) {
+      switchTab(state.tab, false);
+      openArticle(state.id, false);
+    } else {
+      switchTab(state.tab || 'codi-penal', false);
+    }
+    history.pushState(state, '', location.href);
+  });
+});
