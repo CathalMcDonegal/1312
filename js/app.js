@@ -112,15 +112,25 @@ function openArticle(id) {
 
   const source = item.source ? `<a class="source-link" href="${escapeHtml(item.source)}" target="_blank" rel="noopener noreferrer">Font oficial ↗</a>` : '';
   const fullText = item.text || item.summary || 'No hi ha text complet disponible per a aquest article.';
+  const paragraphs = escapeHtml(fullText)
+    .split(/\n+/)
+    .map(p => p.trim())
+    .filter(Boolean)
+    .map(p => `<p>${p}</p>`)
+    .join('');
   panel.innerHTML = `
     <button class="article-back" type="button">← Tornar als resultats</button>
     <article class="article-detail">
       <div class="article-detail-header">
-        <span class="article-num">Art. ${escapeHtml(item.article)}</span>
+        <div class="article-heading">
+          <span class="article-label">ARTICLE</span>
+          <span class="article-number-large">${escapeHtml(item.article)}</span>
+        </div>
         <button class="favorite-btn ${isFavorite(item.id) ? 'is-favorite' : ''}" type="button" data-favorite="${escapeHtml(item.id)}" aria-label="${isFavorite(item.id) ? 'Treure dels favorits' : 'Afegir als favorits'}">${isFavorite(item.id) ? '★' : '☆'}</button>
       </div>
       <h2>${escapeHtml(item.title)}</h2>
-      <div class="article-detail-text">${escapeHtml(fullText).replace(/\n/g, '<br>')}</div>
+      <div class="article-detail-divider"></div>
+      <div class="article-detail-text">${paragraphs}</div>
       ${source}
     </article>`;
 
@@ -279,7 +289,11 @@ function renderList(panelId, items) {
   let html = `<div class="results-count">${items.length} resultat${items.length !== 1 ? 's' : ''}</div>`;
   items.forEach(item => { html += articleCard(item); });
   panel.innerHTML = html;
-  panel.querySelectorAll('[data-favorite]').forEach(btn => btn.addEventListener('click', () => toggleFavorite(btn.dataset.favorite)));
+  panel.querySelectorAll('[data-favorite]').forEach(btn => btn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    toggleFavorite(btn.dataset.favorite);
+  }));
+  bindArticleCards(panel);
 }
 
 // Cercar
