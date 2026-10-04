@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let debounceTimer;
   searchInput.addEventListener('input', (e) => {
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => handleSearch(e.target.value), 220);
+    debounceTimer = setTimeout(() => handleSearch(e.target.value, false), 220);
   });
 
   // Enter a jurisprudència
@@ -241,6 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const activeTab = document.querySelector('.tab.active').dataset.tab;
       if (activeTab === 'jurisprudencia') {
         searchJurisprudencia('cendoj');
+      } else if (activeTab !== 'favorits' && activeTab !== 'historial') {
+        addHistory(e.target.value, activeTab);
       }
     }
   });
