@@ -91,8 +91,10 @@ function articleCard(item) {
       <span class="card-title">${escapeHtml(item.title)}</span>
       <button class="favorite-btn ${isFavorite(item.id) ? 'is-favorite' : ''}" type="button" data-favorite="${escapeHtml(item.id)}" aria-label="${isFavorite(item.id) ? 'Treure dels favorits' : 'Afegir als favorits'}">${star}</button>
     </div>
+    <div class="card-section-label">Resum</div>
     <p class="card-summary">${escapeHtml(item.summary || item.text || '')}</p>
-    <div class="card-more">Toca per veure el text complet →</div>
+    ${extractPenalty(item) ? `<div class="card-section-label penalty-label">Penes</div><p class="card-penalty">${escapeHtml(extractPenalty(item))}</p>` : ''}
+    <div class="card-more">Toca per veure el redactat complet →</div>
     ${source}
   </article>`;
 }
@@ -263,6 +265,44 @@ function normalizeText(value) {
     .trim();
 }
 
+/* Paraula catalana → termes jurídics equivalents que poden aparèixer al text oficial */
+const SEARCH_EQUIVALENTS = {
+  furt: ['furt', 'hurto'],
+  robatori: ['robatori', 'robo'],
+  'robatori amb força': ['robatori amb força', 'robo con fuerza'],
+  'robatori amb violència': ['robatori amb violència', 'robo con violencia', 'robo con intimidacion'],
+  violència: ['violència', 'violencia'],
+  intimidació: ['intimidació', 'intimidacion'],
+  amenaces: ['amenaces', 'amenazas'],
+  coaccions: ['coaccions', 'coacciones'],
+  lesions: ['lesions', 'lesiones'],
+  homicidi: ['homicidi', 'homicidio'],
+  estafa: ['estafa'],
+  danys: ['danys', 'daños'],
+  detenció: ['detenció', 'detencion'],
+  detingut: ['detingut', 'detenido'],
+  desobediència: ['desobediència', 'desobediencia'],
+  resistència: ['resistència', 'resistencia'],
+  atemptat: ['atemptat', 'atentado'],
+  drogues: ['drogues', 'drogas'],
+  conducció: ['conducció', 'conduccion'],
+  alcohol: ['alcohol'],
+  armes: ['armes', 'armas']
+};
+
+function expandSearchTerm(term) {
+  const normalized = normalizeText(term);
+  return SEARCH_EQUIVALENTS[normalized]
+    ? SEARCH_EQUIVALENTS[normalized].map(normalizeText)
+    : [normalized];
+}
+
+function extractPenalty(item) {
+  const text = String(item.summary || item.text || '');
+  const match = text.match(/(?:pena|penes|castigat|castigats|multa|multes)[^.!?]*(?:[.!?]|$)/i);
+  return match ? match[0].trim() : '';
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -318,7 +358,7 @@ function handleSearch(query, record = true) {
       item.text,
       ...(item.keywords || [])
     ].join(' '));
-    return terms.every(term => searchText.includes(term));
+    return terms.every(term => expandSearchTerm(term).some(candidate => searchText.includes(candidate)));
   });
 
   renderList(activeTab, filtered);
