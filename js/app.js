@@ -13,7 +13,7 @@ let data = {
   'seguretat': []
 };
 
-const panelIds = ['codi-penal', 'lecrim', 'circulacio', 'ordenanca', 'seguretat', 'jurisprudencia', 'favorits', 'historial'];
+const panelIds = ['codi-penal', 'lecrim', 'circulacio', 'ordenanca', 'seguretat', 'jurisprudencia', 'favorits', 'historial', 'actualitzacions'];
 
 const FAVORITES_KEY = '1312_favorits';
 const HISTORY_KEY = '1312_historial';
@@ -103,12 +103,14 @@ async function loadData() {
         if (Array.isArray(items) && items.length) data[section] = items;
       });
       window.NORMATIVA_BOE_UPDATED = official.generatedAt || null;
+      window.NORMATIVA_BOE_META = Object.fromEntries(Object.entries(official.sources || {}).map(([k,v]) => [k, {date: (official.generatedAt || '').slice(0,10).split('-').reverse().join('/'), source:'BOE — text consolidat', count:v.count}]));
     }
   } catch (error) {
     console.warn('No s’ha pogut carregar la base oficial del BOE; s’utilitza la còpia incorporada.', error);
   }
 
   panelIds.slice(0, 5).forEach(id => renderList(id, data[id]));
+  renderUpdates();
 }
 
 // Canviar de pestanya
@@ -127,6 +129,10 @@ function switchTab(tabId) {
     searchInput.placeholder = getPlaceholder(tabId);
     searchInput.value = '';
     renderList(tabId, data[tabId]);
+  } else if (tabId === 'actualitzacions') {
+    searchInput.placeholder = 'Informació de normativa i actualitzacions';
+    searchInput.value = '';
+    renderUpdates();
   } else if (tabId === 'jurisprudencia') {
     searchInput.placeholder = 'Cerca jurisprudència (ex: violència de gènere, furt...)';
     searchInput.value = '';
@@ -137,13 +143,40 @@ function switchTab(tabId) {
   }
 }
 
+function renderUpdates() {
+  const panel = document.getElementById('actualitzacions');
+  if (!panel) return;
+  const official = window.NORMATIVA_BOE_META || {};
+  const rows = [
+    ['Codi Penal', 'codi-penal', official['codi-penal']],
+    ['LECrim', 'lecrim', official.lecrim],
+    ['Circulació', 'circulacio', official.circulacio],
+    ['Ordenança de Barcelona', 'ordenanca', {date:'06/05/2026', source:'BOPB — rectificació oficial 2026'}],
+    ['Seguretat ciutadana', 'seguretat', official.seguretat]
+  ];
+  panel.innerHTML = `
+    <div class="updates-header">
+      <div class="updates-icon">✓</div>
+      <div><h2>Normativa actualitzada</h2><p>Última actualització de la base disponible a 1312.</p></div>
+    </div>
+    <div class="update-list">${rows.map(([name,key,meta]) => `
+      <div class="update-row">
+        <div><strong>${escapeHtml(name)}</strong><small>${escapeHtml(meta?.source || 'Base incorporada')}</small></div>
+        <span>${escapeHtml(meta?.date || '04/10/2026')}</span>
+      </div>`).join('')}</div>
+    <div class="updates-note">La normativa estatal es regenera automàticament a partir del text consolidat del BOE. L'Ordenança de Barcelona incorpora la reforma 2026 i la rectificació publicada el 06/05/2026.</div>
+    <a class="btn btn-outline updates-source" href="https://bop.diba.cat/anunci/3882054/aprovacio-definitiva-de-l-ordenanca-de-modificacio-de-l-ordenanca-de-mesures-per-fomentar-i-garantir-la-convivencia-ciutadana-a-l-espai-public-ajuntament-de-barcelona" target="_blank" rel="noopener noreferrer">📜 Font oficial BOPB</a>
+  `;
+}
+
 function getPlaceholder(tabId) {
   const placeholders = {
     'codi-penal': 'Cerca al Codi Penal (ex: furt, violència, resistència...)',
     'lecrim': 'Cerca a la LECrim (ex: detenció, drets, judicis ràpids...)',
     'circulacio': 'Cerca al Codi de Circulació (ex: alcohol, velocitat, mòbil...)',
     'ordenanca': 'Cerca a l\'Ordenança (ex: alcohol, orina, grafits...)',
-    'seguretat': 'Cerca a la LO 4/2015 (ex: drogues, identificació, manifestacions...)'
+    'seguretat': 'Cerca a la LO 4/2015 (ex: drogues, identificació, manifestacions...)',
+    'actualitzacions': 'Informació de normativa i actualitzacions'
   };
   return placeholders[tabId] || 'Cerca...';
 }
