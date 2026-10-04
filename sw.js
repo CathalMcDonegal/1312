@@ -1,4 +1,4 @@
-const CACHE_NAME = 'normativa-penal-bcn-v1';
+const CACHE_NAME = 'normativa-penal-bcn-v2';
 
 const APP_SHELL = [
   './',
