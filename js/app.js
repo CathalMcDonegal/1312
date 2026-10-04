@@ -535,7 +535,16 @@ function getCatalanFallback(item) {
     'ordenanca': typeof DATA_ORD !== 'undefined' ? DATA_ORD : [],
     'seguretat': typeof DATA_SC !== 'undefined' ? DATA_SC : []
   };
-  const list = sources[item.section] || [];
+  let list = sources[item.section] || [];
+  if (!list.length) {
+    const id = String(item.id || '');
+    const key = id.startsWith('codi-penal-') || id.startsWith('cp-') ? 'codi-penal'
+      : id.startsWith('lecrim-') || id.startsWith('le-') ? 'lecrim'
+      : id.startsWith('circulacio-') || id.startsWith('circ-') ? 'circulacio'
+      : id.startsWith('ordenanca-') ? 'ordenanca'
+      : id.startsWith('seguretat-') || id.startsWith('sc-') ? 'seguretat' : '';
+    list = sources[key] || [];
+  }
   return list.find(x => String(x.article).toLowerCase() === String(item.article).toLowerCase()) || null;
 }
 
