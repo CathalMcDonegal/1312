@@ -1,0 +1,20 @@
+{
+  "name": "Normativa Penal BCN",
+  "short_name": "Normativa BCN",
+  "description": "Normativa Penal i Civisme Barcelona",
+  "lang": "ca",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7fafc",
+  "theme_color": "#1a365d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
