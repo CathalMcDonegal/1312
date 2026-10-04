@@ -6,83 +6,29 @@
   <meta name="theme-color" content="#1a365d">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="Normativa Penal i Civisme Barcelona">
+  <meta name="description" content="1312 — normativa penal i policial de consulta">
   <title>1312</title>
   <link rel="icon" href="logo.png">
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/cp.css">
 </head>
 <body>
   <div class="watermark" aria-hidden="true">TIP 18675</div>
-
-  <div class="install-fixed" id="installFixed" hidden>
-    <button id="installAppBtn" type="button" aria-label="Instal·lar l'aplicació">📲</button>
-  </div>
-
-  <div class="update-banner" id="updateBanner" hidden>
-    <div class="update-message">
-      <strong>🔄 Nova actualització disponible</strong>
-      <span>Hi ha una nova versió de 1312.</span>
-    </div>
-    <button id="updateAppBtn" type="button">Actualitzar</button>
-    <button id="dismissUpdateBtn" type="button" aria-label="Tancar">×</button>
-  </div>
-
+  <div class="install-fixed" id="installFixed" hidden><button id="installAppBtn" type="button" aria-label="Instal·lar l'aplicació">📲</button></div>
+  <div class="update-banner" id="updateBanner" hidden><div class="update-message"><strong>🔄 Nova actualització disponible</strong><span>Hi ha una nova versió de 1312.</span></div><button id="updateAppBtn" type="button">Actualitzar</button><button id="dismissUpdateBtn" type="button" aria-label="Tancar">×</button></div>
   <div class="app">
-    <header class="header">
-      <div class="header-brand">
-        <img src="logo.png" alt="Logo Justícia" class="logo">
-        <div>
-          <h1>1312</h1>
-          <p>Codi Penal · LECrim · Circulació · Ordenança · Seguretat · BOE</p>
-        </div>
-      </div>
-    </header>
-
+    <header class="header"><div class="header-brand"><img src="logo.png" alt="Logo 1312" class="logo"><div><h1>1312</h1><p>Consulta ràpida de normativa</p></div></div></header>
     <nav class="tabs">
-      <button class="tab active" data-tab="codi-penal">Codi Penal</button>
-      <button class="tab" data-tab="lecrim">LECrim</button>
-      <button class="tab" data-tab="circulacio">Circulació</button>
-      <button class="tab" data-tab="ordenanca">Ordenança</button>
-      <button class="tab" data-tab="seguretat">Seguretat</button>
-      <button class="tab" data-tab="jurisprudencia">Jurispr.</button>
-      <button class="tab" data-tab="favorits">⭐ Favorits</button>
-      <button class="tab" data-tab="historial">🕘 Historial</button>
-      <button class="tab" data-tab="actualitzacions">🔄 Actualitzacions</button>
+      <button class="tab active" data-tab="codi-penal">Codi Penal</button><button class="tab" data-tab="lecrim">LECrim</button><button class="tab" data-tab="circulacio">Circulació</button><button class="tab" data-tab="ordenanca">Ordenança</button><button class="tab" data-tab="seguretat">Seguretat</button><button class="tab" data-tab="jurisprudencia">Jurispr.</button><button class="tab" data-tab="favorits">⭐ Favorits</button><button class="tab" data-tab="historial">🕘 Historial</button><button class="tab" data-tab="actualitzacions">🔄 Actualitzacions</button>
     </nav>
-
-    <div class="search-box">
-      <input type="search" id="search-input" placeholder="Cerca al Codi Penal (ex: furt, violència, resistència...)" autocomplete="off" enterkeyhint="search">
-    </div>
-
+    <div class="search-box"><input type="search" id="search-input" placeholder="Cerca al Codi Penal: furt, robatori, lesions..." autocomplete="off" enterkeyhint="search"></div>
     <main class="content">
-      <div id="codi-penal" class="panel active"><div class="no-results"><p>Carregant...</p></div></div>
-      <div id="lecrim" class="panel"><div class="no-results"><p>Carregant...</p></div></div>
-      <div id="circulacio" class="panel"><div class="no-results"><p>Carregant...</p></div></div>
-      <div id="ordenanca" class="panel"><div class="no-results"><p>Carregant...</p></div></div>
-      <div id="seguretat" class="panel"><div class="no-results"><p>Carregant...</p></div></div>
-      <div id="favorits" class="panel"></div>
-      <div id="historial" class="panel"></div>
-      <div id="actualitzacions" class="panel"></div>
-      <div id="jurisprudencia" class="panel">
-        <div class="juris-info">
-          <strong>Cerca de jurisprudència en línia</strong><br>
-          Escriu un concepte, article o fet delictiu al cercador de dalt i tria on vols cercar. S'obrirà el navegador amb els resultats reals dels tribunals.
-        </div>
-        <div class="juris-buttons">
-          <button class="btn btn-primary" onclick="searchJurisprudencia('cendoj')">🏛️ Cercar al CENDOJ (Poder Judicial)</button>
-          <button class="btn btn-accent" onclick="searchJurisprudencia('google')">🔍 Cercar a Google (Poder Judicial + Vlex)</button>
-          <button class="btn btn-outline" onclick="searchJurisprudencia('tsj')">⚖️ Cercar TSJ Catalunya / AP Barcelona</button>
-        </div>
-        <div class="footer-note" style="margin-top: 24px;">
-          Necessites connexió a internet.<br>
-          Els resultats s'obren al navegador del telèfon.
-        </div>
-      </div>
+      <div id="codi-penal" class="panel active"></div><div id="lecrim" class="panel"></div><div id="circulacio" class="panel"></div><div id="ordenanca" class="panel"></div><div id="seguretat" class="panel"></div><div id="favorits" class="panel"></div><div id="historial" class="panel"></div><div id="actualitzacions" class="panel"></div>
+      <div id="jurisprudencia" class="panel"><div class="juris-info"><strong>Cerca de jurisprudència en línia</strong><br>Escriu un concepte, article o fet delictiu al cercador i tria on vols cercar.</div><div class="juris-buttons"><button class="btn btn-primary" onclick="searchJurisprudencia('cendoj')">🏛️ Cercar al CENDOJ</button><button class="btn btn-accent" onclick="searchJurisprudencia('google')">🔍 Cercar en línia</button><button class="btn btn-outline" onclick="searchJurisprudencia('tsj')">⚖️ TSJ Catalunya / AP Barcelona</button></div></div>
     </main>
   </div>
-
   <script src="js/app.js" defer></script>
 </body>
 </html>
