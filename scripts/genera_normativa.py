@@ -5,6 +5,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from bs4 import BeautifulSoup
+from pypdf import PdfReader
 
 NORMS = [
     {"section":"codi-penal","name":"Codi Penal","id":"BOE-A-1995-25444","url":"https://www.boe.es/buscar/act.php?id=BOE-A-1995-25444&tn=1"},
@@ -14,6 +15,8 @@ NORMS = [
 ]
 
 OUT = Path("data/normativa-oficial.json")
+ORD_URL = "https://bop.diba.cat/anuncio/ver-pdf/3882054"
+ORD_CORRECCIO_URL = "https://bcnroc.ajuntament.barcelona.cat/jspui/bitstream/11703/144306/11/BOPB_esmena-ordenana-mesures-convivencia_2026.pdf"
 ARTICLE_RE = re.compile(r"^Art[ií]culo\s+([0-9]+(?:\s+(?:bis|ter|qu[aá]ter|quinquies|sexies))?)\.?\s*(.*)$", re.I)
 
 def clean(value):
@@ -80,6 +83,43 @@ def parse_norm(norm):
 
     return sorted(articles, key=sort_key)
 
+
+def parse_ordenanca():
+    req = urllib.request.Request(ORD_URL, headers={"User-Agent":"Mozilla/5.0 (compatible; 1312 legal app)"})
+    with urllib.request.urlopen(req, timeout=90) as response:
+        reader = PdfReader(response)
+    text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    text = re.sub(r"\s+", " ", text)
+    chunks = re.split(r"(?=Article\s+(?:[0-9]+|únic)\b)", text, flags=re.I)
+    items = []
+    for i, chunk in enumerate(chunks):
+        chunk = clean(chunk)
+        if len(chunk) < 80:
+            continue
+        m = re.match(r"Article\s+([^\.]+)\.?(.*)", chunk, re.I)
+        article_no = clean(m.group(1)) if m else "Document 2026"
+        items.append({
+            "id": f"ordenanca-2026-{i}",
+            "article": article_no,
+            "title": "Ordenança de convivència — reforma 2026",
+            "keywords": ["ordenança", "convivència", "civisme", "Barcelona"],
+            "summary": chunk,
+            "text": chunk,
+            "source": "https://bop.diba.cat/anunci/3882054/aprovacio-definitiva-de-l-ordenanca-de-modificacio-de-l-ordenanca-de-mesures-per-fomentar-i-garantir-la-convivencia-ciutadana-a-l-espai-public-ajuntament-de-barcelona",
+            "sourceLabel": "BOPB — reforma publicada 15/01/2026"
+        })
+    items.append({
+        "id":"ordenanca-correccio-2026",
+        "article":"Correcció 2026",
+        "title":"Rectificació d'errades materials",
+        "keywords":["correcció","rectificació","article 43","article 66","article 67","article 101"],
+        "summary":"Rectificació oficial publicada el 06/05/2026 de diverses errades materials de la reforma de l'Ordenança de convivència.",
+        "text":"Rectificació oficial publicada el 06/05/2026. Es corregeixen, entre d'altres, referències dels articles 43.2, 66, 67 i 101 de la reforma publicada el 15/01/2026.",
+        "source":ORD_CORRECCIO_URL,
+        "sourceLabel":"Ajuntament de Barcelona / BOPB — rectificació 06/05/2026"
+    })
+    return items
+
 def main():
     output = {
         "generatedAt": datetime.now(timezone.utc).isoformat(),
@@ -102,6 +142,18 @@ def main():
         except Exception as exc:
             print(f"ERROR {norm['name']}: {exc}")
             raise
+
+
+    ord_items = parse_ordenanca()
+    output["data"]["ordenanca"] = ord_items
+    output["sources"]["ordenanca"] = {
+        "name":"Ordenança de convivència de Barcelona",
+        "url":ORD_URL,
+        "correccioUrl":ORD_CORRECCIO_URL,
+        "date":"2026-05-06",
+        "count":len(ord_items)
+    }
+    print(f"Ordenança Barcelona: {len(ord_items)} entrades")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(output, ensure_ascii=False, separators=(",",":")), encoding="utf-8")
