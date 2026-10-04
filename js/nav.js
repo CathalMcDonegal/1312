@@ -1,0 +1,1 @@
+document.addEventListener('DOMContentLoaded',()=>{history.replaceState({view:'home'},'',location.href);history.pushState({view:'home',sentinel:true},'',location.href);window.addEventListener('popstate',e=>{const s=e.state||{};if(s.view==='home'&&!s.sentinel){history.pushState({view:'home',sentinel:true},'',location.href);}});});
