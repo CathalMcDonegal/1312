@@ -13,7 +13,76 @@ let data = {
   'seguretat': []
 };
 
-const panelIds = ['codi-penal', 'lecrim', 'circulacio', 'ordenanca', 'seguretat', 'jurisprudencia'];
+const panelIds = ['codi-penal', 'lecrim', 'circulacio', 'ordenanca', 'seguretat', 'jurisprudencia', 'favorits', 'historial'];
+
+const FAVORITES_KEY = '1312_favorits';
+const HISTORY_KEY = '1312_historial';
+
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch (_) { return []; }
+}
+function saveFavorites(items) { localStorage.setItem(FAVORITES_KEY, JSON.stringify(items)); }
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch (_) { return []; }
+}
+function saveHistory(items) { localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, 20))); }
+function allArticles() {
+  return Object.entries(data).flatMap(([section, items]) => items.map(item => ({...item, section})));
+}
+function findArticle(id) { return allArticles().find(item => item.id === id); }
+function isFavorite(id) { return getFavorites().includes(id); }
+function toggleFavorite(id) {
+  const favorites = getFavorites();
+  const next = favorites.includes(id) ? favorites.filter(x => x !== id) : [id, ...favorites];
+  saveFavorites(next);
+  renderCurrentView();
+}
+function addHistory(query, section) {
+  const q = query.trim();
+  if (!q) return;
+  const history = getHistory().filter(item => !(item.query === q && item.section === section));
+  history.unshift({query: q, section, time: Date.now()});
+  saveHistory(history);
+  renderHistory();
+}
+function renderCurrentView() {
+  const active = document.querySelector('.tab.active')?.dataset.tab;
+  if (!active) return;
+  if (active === 'favorits') renderFavorites();
+  else if (active === 'historial') renderHistory();
+  else if (data[active]) renderList(active, data[active]);
+}
+function renderFavorites() {
+  const panel = document.getElementById('favorits');
+  const items = getFavorites().map(findArticle).filter(Boolean);
+  if (!items.length) {
+    panel.innerHTML = '<div class="no-results"><div class="empty-icon">☆</div><p>No tens articles favorits.<br>Toca ☆ en qualsevol article per guardar-lo.</p></div>';
+    return;
+  }
+  panel.innerHTML = `<div class="results-count">${items.length} article${items.length !== 1 ? 's' : ''} favorit${items.length !== 1 ? 's' : ''}</div>` + items.map(item => articleCard(item)).join('');
+  panel.querySelectorAll('[data-favorite]').forEach(btn => btn.addEventListener('click', () => toggleFavorite(btn.dataset.favorite)));
+}
+function renderHistory() {
+  const panel = document.getElementById('historial');
+  const history = getHistory();
+  if (!history.length) {
+    panel.innerHTML = '<div class="no-results"><div class="empty-icon">◷</div><p>Encara no hi ha cerques recents.</p></div>';
+    return;
+  }
+  panel.innerHTML = '<div class="history-actions"><button class="clear-history" type="button">Esborrar historial</button></div>' + history.map(item => `<button class="history-item" type="button" data-query="${escapeHtml(item.query)}" data-section="${escapeHtml(item.section)}"><span>🔎</span><span><strong>${escapeHtml(item.query)}</strong><small>${escapeHtml(item.section)}</small></span></button>`).join('');
+  panel.querySelector('.clear-history')?.addEventListener('click', () => { saveHistory([]); renderHistory(); });
+  panel.querySelectorAll('.history-item').forEach(btn => btn.addEventListener('click', () => {
+    switchTab(btn.dataset.section);
+    const input = document.getElementById('search-input');
+    input.value = btn.dataset.query;
+    handleSearch(btn.dataset.query, false);
+  }));
+}
+function articleCard(item) {
+  const star = isFavorite(item.id) ? '★' : '☆';
+  return `<div class="card"><div class="card-header"><span class="article-num">Art. ${escapeHtml(item.article)}</span><span class="card-title">${escapeHtml(item.title)}</span><button class="favorite-btn ${isFavorite(item.id) ? 'is-favorite' : ''}" type="button" data-favorite="${escapeHtml(item.id)}" aria-label="${isFavorite(item.id) ? 'Treure dels favorits' : 'Afegir als favorits'}">${star}</button></div><p class="card-summary">${escapeHtml(item.summary)}</p></div>`;
+}
+
 
 // Carregar dades
 function loadData() {
@@ -38,12 +107,17 @@ function switchTab(tabId) {
 
   // Netejar cercador si canviem de norma
   const searchInput = document.getElementById('search-input');
-  if (tabId !== 'jurisprudencia') {
+  if (tabId !== 'jurisprudencia' && tabId !== 'favorits' && tabId !== 'historial') {
     searchInput.placeholder = getPlaceholder(tabId);
     searchInput.value = '';
     renderList(tabId, data[tabId]);
-  } else {
+  } else if (tabId === 'jurisprudencia') {
     searchInput.placeholder = 'Cerca jurisprudència (ex: violència de gènere, furt...)';
+    searchInput.value = '';
+  } else {
+    searchInput.placeholder = tabId === 'favorits' ? 'Els teus articles favorits' : 'Cerques recents';
+    searchInput.value = '';
+    tabId === 'favorits' ? renderFavorites() : renderHistory();
   }
 }
 
@@ -90,21 +164,13 @@ function renderList(panelId, items) {
   }
 
   let html = `<div class="results-count">${items.length} resultat${items.length !== 1 ? 's' : ''}</div>`;
-  items.forEach(item => {
-    html += `
-      <div class="card">
-        <div class="card-header">
-          <span class="article-num">Art. ${escapeHtml(item.article)}</span>
-          <span class="card-title">${escapeHtml(item.title)}</span>
-        </div>
-        <p class="card-summary">${escapeHtml(item.summary)}</p>
-      </div>`;
-  });
+  items.forEach(item => { html += articleCard(item); });
   panel.innerHTML = html;
+  panel.querySelectorAll('[data-favorite]').forEach(btn => btn.addEventListener('click', () => toggleFavorite(btn.dataset.favorite)));
 }
 
 // Cercar
-function handleSearch(query) {
+function handleSearch(query, record = true) {
   const activeTab = document.querySelector('.tab.active').dataset.tab;
   if (activeTab === 'jurisprudencia') return;
 
@@ -113,6 +179,8 @@ function handleSearch(query) {
     renderList(activeTab, data[activeTab]);
     return;
   }
+
+  if (record) addHistory(query, activeTab);
 
   const terms = q.split(/\s+/).filter(Boolean);
   const filtered = data[activeTab].filter(item => {
