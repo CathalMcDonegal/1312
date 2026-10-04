@@ -425,3 +425,10 @@ html, body {
 .article-detail-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .article-detail h2 { margin: 12px 0 16px; font-size: 1.2rem; line-height: 1.3; }
 .article-detail-text { font-family: Georgia, "Times New Roman", serif; font-size: .94rem; line-height: 1.7; color: var(--text); }
+
+.article-heading{display:flex;align-items:center;gap:8px}
+.article-label{font-size:.65rem;font-weight:800;letter-spacing:.08em;color:var(--text-muted)}
+.article-number-large{font-size:1.35rem;font-weight:800;color:var(--primary)}
+.article-detail-divider{height:1px;background:var(--border);margin:14px 0 16px}
+.article-detail-text p{margin:0 0 14px}
+.article-detail-text p:last-child{margin-bottom:0}
