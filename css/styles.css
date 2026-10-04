@@ -432,3 +432,9 @@ html, body {
 .article-detail-divider{height:1px;background:var(--border);margin:14px 0 16px}
 .article-detail-text p{margin:0 0 14px}
 .article-detail-text p:last-child{margin-bottom:0}
+
+/* Resultats jurídics: lectura ràpida */
+.card-section-label { margin-top: 10px; margin-bottom: 3px; font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); }
+.card-section-label:first-child { margin-top: 0; }
+.card-penalty { font-size: .82rem; font-weight: 600; line-height: 1.45; color: var(--primary); }
+.penalty-label { color: var(--accent); }
