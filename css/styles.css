@@ -411,3 +411,6 @@ html, body {
   text-decoration: none;
 }
 .source-link:active { text-decoration: underline; }
+
+
+.updates-header{display:flex;gap:12px;align-items:center;background:white;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}.updates-icon{width:40px;height:40px;border-radius:50%;background:#c6f6d5;color:#276749;display:grid;place-items:center;font-weight:800}.updates-header h2{font-size:1rem}.updates-header p{font-size:.75rem;color:var(--text-muted)}.update-list{background:white;border:1px solid var(--border);border-radius:12px;overflow:hidden}.update-row{display:flex;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}.update-row:last-child{border-bottom:0}.update-row div{display:flex;flex-direction:column}.update-row strong{font-size:.88rem}.update-row small{font-size:.68rem;color:var(--text-muted);margin-top:2px}.update-row span{font-size:.72rem;font-weight:700;color:var(--success);white-space:nowrap}.updates-note{font-size:.75rem;line-height:1.45;color:var(--text-muted);padding:14px 4px}.updates-source{margin-top:6px;width:100%;}
