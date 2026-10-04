@@ -80,17 +80,33 @@ function renderHistory() {
 }
 function articleCard(item) {
   const star = isFavorite(item.id) ? '★' : '☆';
-  return `<div class="card"><div class="card-header"><span class="article-num">Art. ${escapeHtml(item.article)}</span><span class="card-title">${escapeHtml(item.title)}</span><button class="favorite-btn ${isFavorite(item.id) ? 'is-favorite' : ''}" type="button" data-favorite="${escapeHtml(item.id)}" aria-label="${isFavorite(item.id) ? 'Treure dels favorits' : 'Afegir als favorits'}">${star}</button></div><p class="card-summary">${escapeHtml(item.summary)}</p></div>`;
+  const source = item.source ? `<a class="source-link" href="${escapeHtml(item.source)}" target="_blank" rel="noopener noreferrer">Font oficial BOE ↗</a>` : '';
+  return `<div class="card"><div class="card-header"><span class="article-num">Art. ${escapeHtml(item.article)}</span><span class="card-title">${escapeHtml(item.title)}</span><button class="favorite-btn ${isFavorite(item.id) ? 'is-favorite' : ''}" type="button" data-favorite="${escapeHtml(item.id)}" aria-label="${isFavorite(item.id) ? 'Treure dels favorits' : 'Afegir als favorits'}">${star}</button></div><p class="card-summary">${escapeHtml(item.summary || item.text || '')}</p>${source}</div>`;
 }
 
 
 // Carregar dades
-function loadData() {
+async function loadData() {
+  // Les dades generades pel BOE tenen prioritat; les dades incorporades serveixen
+  // com a còpia de seguretat si el fitxer encara no s'ha generat.
   data['codi-penal'] = DATA_CP || [];
   data['lecrim'] = typeof DATA_LE !== 'undefined' ? DATA_LE : [];
   data['circulacio'] = typeof DATA_CIRC !== 'undefined' ? DATA_CIRC : [];
   data['ordenanca'] = DATA_ORD || [];
   data['seguretat'] = DATA_SC || [];
+
+  try {
+    const response = await fetch('./data/normativa-oficial.json', { cache: 'no-store' });
+    if (response.ok) {
+      const official = await response.json();
+      Object.entries(official.data || {}).forEach(([section, items]) => {
+        if (Array.isArray(items) && items.length) data[section] = items;
+      });
+      window.NORMATIVA_BOE_UPDATED = official.generatedAt || null;
+    }
+  } catch (error) {
+    console.warn('No s’ha pogut carregar la base oficial del BOE; s’utilitza la còpia incorporada.', error);
+  }
 
   panelIds.slice(0, 5).forEach(id => renderList(id, data[id]));
 }
@@ -188,6 +204,7 @@ function handleSearch(query, record = true) {
       item.article,
       item.title,
       item.summary,
+      item.text,
       ...(item.keywords || [])
     ].join(' '));
     return terms.every(term => searchText.includes(term));
