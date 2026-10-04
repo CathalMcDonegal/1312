@@ -177,3 +177,112 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+
+/* =========================
+   PWA: instal·lació + actualitzacions
+   ========================= */
+(function initPWA() {
+  const installBox = document.getElementById('installFixed');
+  const installBtn = document.getElementById('installAppBtn');
+  const updateBanner = document.getElementById('updateBanner');
+  const updateBtn = document.getElementById('updateAppBtn');
+  const dismissUpdateBtn = document.getElementById('dismissUpdateBtn');
+
+  let deferredInstallPrompt = null;
+  let waitingWorker = null;
+
+  const isStandalone = () =>
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+
+  function showInstallButton() {
+    if (!isStandalone() && installBox) installBox.hidden = false;
+  }
+
+  function hideInstallButton() {
+    if (installBox) installBox.hidden = true;
+  }
+
+  function showUpdateBanner() {
+    if (updateBanner) updateBanner.hidden = false;
+  }
+
+  function hideUpdateBanner() {
+    if (updateBanner) updateBanner.hidden = true;
+  }
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    showInstallButton();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    hideInstallButton();
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      if (choice.outcome === 'accepted') hideInstallButton();
+      deferredInstallPrompt = null;
+    });
+  }
+
+  if (dismissUpdateBtn) {
+    dismissUpdateBtn.addEventListener('click', hideUpdateBanner);
+  }
+
+  function activateWaitingWorker() {
+    if (!waitingWorker) return;
+    waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+  }
+
+  if (updateBtn) updateBtn.addEventListener('click', activateWaitingWorker);
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then((registration) => {
+      function checkWaiting() {
+        if (registration.waiting) {
+          waitingWorker = registration.waiting;
+          showUpdateBanner();
+        }
+      }
+
+      checkWaiting();
+
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            waitingWorker = newWorker;
+            showUpdateBanner();
+          }
+        });
+      });
+
+      // Comprova actualitzacions quan tornem a obrir/llevar l'app al primer pla.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          registration.update().catch(() => {});
+          checkWaiting();
+        }
+      });
+    }).catch((error) => {
+      console.warn('PWA: no s’ha pogut registrar el Service Worker.', error);
+    });
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  }
+})();
