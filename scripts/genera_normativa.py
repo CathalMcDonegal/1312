@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import io
 import json
 import re
 import urllib.request
@@ -12,6 +13,9 @@ NORMS = [
     {"section":"lecrim","name":"LECrim","id":"BOE-A-1882-6036","url":"https://www.boe.es/buscar/act.php?id=BOE-A-1882-6036&tn=1"},
     {"section":"circulacio","name":"Llei de trànsit","id":"BOE-A-2015-11722","url":"https://www.boe.es/buscar/act.php?id=BOE-A-2015-11722&tn=1"},
     {"section":"seguretat","name":"Seguretat ciutadana","id":"BOE-A-2015-3442","url":"https://www.boe.es/buscar/act.php?id=BOE-A-2015-3442&tn=1"},
+    # Normes complementàries (opcionals: si una falla, la resta es generen igualment)
+    {"section":"circulacio","key":"rgc","name":"Reglament general de circulació","id":"BOE-A-2003-23514","url":"https://www.boe.es/buscar/act.php?id=BOE-A-2003-23514&tn=1"},
+    {"section":"seguretat","key":"fcs","name":"LO 2/1986 Forces i cossos de seguretat","id":"BOE-A-1986-6859","url":"https://www.boe.es/buscar/act.php?id=BOE-A-1986-6859&tn=1"},
 ]
 
 OUT = Path("data/normativa-oficial.json")
@@ -65,12 +69,13 @@ def parse_norm(norm):
         if len(text) < 20:
             continue
         title = f"Article {article_no}"
-        article_id = f"{norm['section']}-{re.sub(r'[^a-z0-9]+','-',article_no.lower()).strip('-')}"
+        article_id = f"{norm.get('key', norm['section'])}-{re.sub(r'[^a-z0-9]+','-',article_no.lower()).strip('-')}"
         articles.append({
             "id": article_id,
             "article": article_no,
             "title": title,
             "keywords": [],
+            "law": norm["name"],
             "summary": text,
             "text": text,
             "source": norm["url"].replace("&tn=1",""),
@@ -87,7 +92,7 @@ def parse_norm(norm):
 def parse_ordenanca():
     req = urllib.request.Request(ORD_URL, headers={"User-Agent":"Mozilla/5.0 (compatible; 1312 legal app)"})
     with urllib.request.urlopen(req, timeout=90) as response:
-        reader = PdfReader(response)
+        reader = PdfReader(io.BytesIO(response.read()))
     text = "\n".join(page.extract_text() or "" for page in reader.pages)
     text = re.sub(r"\s+", " ", text)
     chunks = re.split(r"(?=Article\s+(?:[0-9]+|únic)\b)", text, flags=re.I)
@@ -129,31 +134,40 @@ def main():
     }
 
     for norm in NORMS:
+        key = norm.get("key", norm["section"])
+        optional = "key" in norm
         try:
             items = parse_norm(norm)
             if not items:
                 raise RuntimeError("No s'han detectat articles a la pàgina BOE")
-            output["data"][norm["section"]] = items
-            output["sources"][norm["section"]] = {
-                "name": norm["name"], "url": norm["url"].replace("&tn=1",""),
-                "boeId": norm["id"], "count": len(items)
-            }
-            print(f"{norm['name']}: {len(items)} articles")
         except Exception as exc:
             print(f"ERROR {norm['name']}: {exc}")
+            if optional:
+                continue
             raise
+        output["data"].setdefault(norm["section"], []).extend(items)
+        output["sources"][key] = {
+            "name": norm["name"], "url": norm["url"].replace("&tn=1",""),
+            "boeId": norm["id"], "count": len(items), "section": norm["section"]
+        }
+        print(f"{norm['name']}: {len(items)} articles")
 
-
-    ord_items = parse_ordenanca()
-    output["data"]["ordenanca"] = ord_items
-    output["sources"]["ordenanca"] = {
-        "name":"Ordenança de convivència de Barcelona",
-        "url":ORD_URL,
-        "correccioUrl":ORD_CORRECCIO_URL,
-        "date":"2026-05-06",
-        "count":len(ord_items)
-    }
-    print(f"Ordenança Barcelona: {len(ord_items)} entrades")
+    try:
+        ord_items = parse_ordenanca()
+        for it in ord_items:
+            it["law"] = "Ordenança de convivència"
+        output["data"]["ordenanca"] = ord_items
+        output["sources"]["ordenanca"] = {
+            "name":"Ordenança de convivència de Barcelona",
+            "url":ORD_URL,
+            "correccioUrl":ORD_CORRECCIO_URL,
+            "date":"2026-05-06",
+            "count":len(ord_items),
+            "section":"ordenanca"
+        }
+        print(f"Ordenança Barcelona: {len(ord_items)} entrades")
+    except Exception as exc:
+        print(f"ERROR Ordenança: {exc}")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(output, ensure_ascii=False, separators=(",",":")), encoding="utf-8")
