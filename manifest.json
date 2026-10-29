@@ -1,20 +1,32 @@
 {
-  "name": "1312",
-  "short_name": "1312",
-  "description": "Normativa Penal i Civisme Barcelona",
+  "name": "LexBCN — Normativa",
+  "short_name": "LexBCN",
+  "description": "Normativa penal, de trànsit i de convivència a la butxaca",
   "lang": "ca",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f7fafc",
+  "background_color": "#0b1b3a",
   "theme_color": "#1a365d",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "logo.png",
+      "src": "logo-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "logo-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
