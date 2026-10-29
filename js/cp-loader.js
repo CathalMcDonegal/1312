@@ -18,6 +18,6 @@
     });
     if(typeof hero==='function') hero();
   }catch(e){
-    console.warn('1312: Codi Penal complet no disponible encara',e);
+    console.warn('LexBCN: Codi Penal complet no disponible encara',e);
   }
 })();
