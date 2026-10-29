@@ -1,0 +1,29 @@
+/* LexBCN — capa de disseny modern (clar/fosc) */
+:root{--p1:#0f2a5c;--p2:#2563eb;--p3:#06b6d4;--bg:#f1f5f9;--ink:#0f172a;--mut:#64748b;--card:#fff;--line:#e2e8f0}
+html,body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.app{background:var(--bg)}
+.header{background:linear-gradient(135deg,var(--p1),var(--p2) 70%,var(--p3));border-radius:0 0 26px 26px;padding:18px 18px 20px;box-shadow:0 10px 30px rgba(37,99,235,.28)}
+.header h1{font-size:1.55rem;font-weight:800;letter-spacing:-.03em}
+.header p{font-size:.78rem;opacity:.9}
+.header .logo{width:52px;height:52px;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.tabs{background:transparent;border:0;gap:8px;padding:12px 14px 4px;position:sticky;top:0;z-index:5}
+.tab{flex:0 0 auto;min-width:0;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--mut);font-size:.78rem;font-weight:700;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+.tab.active{background:linear-gradient(135deg,var(--p2),var(--p3));color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(37,99,235,.35)}
+.search-box{background:transparent;border:0;padding:10px 14px 6px}
+.search-box input{padding:15px 18px 15px 46px;border:1px solid var(--line);border-radius:18px;font-size:1rem;background-color:var(--card);box-shadow:0 6px 20px rgba(15,23,42,.08)}
+.search-box input:focus{border-color:var(--p2);box-shadow:0 0 0 4px rgba(37,99,235,.15)}
+.content{padding:10px 14px 28px}
+.result-card,.card,.official,.detail-box,.placeholder-panel,.empty-search{border-radius:18px}
+.result-card{background:var(--card);border:1px solid var(--line);border-left:0;box-shadow:0 8px 24px rgba(15,23,42,.07);transition:transform .15s,box-shadow .15s}
+.result-card:active{transform:scale(.985)}
+.result-top span:first-child{background:linear-gradient(135deg,var(--p2),var(--p3));color:#fff;border-radius:999px;padding:3px 10px;font-weight:800}
+.fav-btn{border-radius:999px}
+.cp-detail h2{font-size:1.35rem;letter-spacing:-.02em}
+.detail-back{border-radius:999px}
+@media (prefers-color-scheme:dark){
+:root{--bg:#0b1220;--ink:#e2e8f0;--mut:#94a3b8;--card:#162033;--line:#26344d}
+.result-card,.official,.fav-btn,.detail-expanded section,.placeholder-panel,.empty-search,.card{background:var(--card)!important;color:var(--ink)!important;border-color:var(--line)!important}
+.detail-box{background:#13233f!important;color:var(--ink)!important}
+.result-card p,.official p,.detail-box p,.result-card strong,.cp-detail h2,.official summary,.fav-btn{color:var(--ink)!important}
+.fav-btn.on{background:#5f4b00!important}.norm-tag{background:#1e3a5f;color:#bee3f8}
+.search-box input{color:var(--ink)}}
