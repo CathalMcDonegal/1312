@@ -1,4 +1,4 @@
-/* 1312 — botons ràpids específics per mòdul */
+/* APPOL — botons ràpids específics per mòdul */
 (function(){
 'use strict';
 const QUICK={
@@ -17,6 +17,7 @@ function refresh(){
       if(input){input.value=b.dataset.q;input.dispatchEvent(new Event('input',{bubbles:true}));}
     });
   });
+  document.querySelectorAll('.norm-hero span').forEach(el=>{el.textContent='APPOL · CONSULTA RÀPIDA';});
 }
 const observer=new MutationObserver(refresh);
 function init(){
