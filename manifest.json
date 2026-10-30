@@ -1,1 +1,15 @@
-{"name":"Actua — guia d’actuació","short_name":"Actua","description":"Guia d’actuació policial pas a pas","lang":"ca","start_url":"./","scope":"./","display":"standalone","background_color":"#0b2a5b","theme_color":"#0b2a5b","orientation":"portrait","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
+{
+  "name": "1312",
+  "short_name": "1312",
+  "description": "Normativa Penal i Civisme Barcelona",
+  "lang": "ca",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7fafc",
+  "theme_color": "#1a365d",
+  "orientation": "portrait",
+  "icons": [
+    {"src":"logo.png","sizes":"192x192","type":"image/png","purpose":"any maskable"}
+  ]
+}
