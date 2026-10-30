@@ -1,4 +1,4 @@
-/* APPOL — ampliació de consulta dels mòduls jurídics. Síntesis de consulta, no text oficial. */
+/* Codex — ampliació de consulta dels mòduls jurídics. Síntesis de consulta, no text oficial. */
 (function(){
 'use strict';
 const PLUS={
@@ -72,7 +72,7 @@ ordenanca:[
 ]};
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
 function key(){const p=document.querySelector('.panel.active');return p&&PLUS[p.id]?p.id:null}
-function render(k,q){const p=document.getElementById(k), n=norm(q);if(!p)return false;const rows=PLUS[k].filter(x=>!n||norm(x.join(' ')).includes(n));if(!rows.length)return false;let old=p.querySelector('.plus-results');if(old)old.remove();const w=document.createElement('div');w.className='norm-results plus-results';w.innerHTML='<div class="norm-results-head"><strong>'+rows.length+' resultats ampliats</strong><span>APPOL · síntesi de consulta</span></div>'+rows.map(x=>'<article class="norm-card"><div class="norm-card-art">Art. '+x[0]+'</div><h3>'+x[1]+'</h3><div class="norm-section"><b>Què regula?</b><p>'+x[3]+'</p></div><div class="norm-source">Font: '+(k==='lecrim'?'LECrim':k==='circulacio'?'Llei de trànsit':k==='seguretat'?'LO 4/2015':'Ordenança Barcelona')+'</div></article>').join('');p.appendChild(w);return true}
+function render(k,q){const p=document.getElementById(k), n=norm(q);if(!p)return false;const rows=PLUS[k].filter(x=>!n||norm(x.join(' ')).includes(n));if(!rows.length)return false;let old=p.querySelector('.plus-results');if(old)old.remove();const w=document.createElement('div');w.className='norm-results plus-results';w.innerHTML='<div class="norm-results-head"><strong>'+rows.length+' resultats ampliats</strong><span>Codex · síntesi de consulta</span></div>'+rows.map(x=>'<article class="norm-card"><div class="norm-card-art">Art. '+x[0]+'</div><h3>'+x[1]+'</h3><div class="norm-section"><b>Què regula?</b><p>'+x[3]+'</p></div><div class="norm-source">Font: '+(k==='lecrim'?'LECrim':k==='circulacio'?'Llei de trànsit':k==='seguretat'?'LO 4/2015':'Ordenança Barcelona')+'</div></article>').join('');p.appendChild(w);return true}
 function init(){const input=document.getElementById('search-input');if(!input)return;input.addEventListener('input',e=>{const k=key();if(!k)return;const q=input.value.trim();if(render(k,q)){e.stopImmediatePropagation();e.preventDefault()}},true)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
