@@ -1,6 +1,6 @@
 {
-  "name": "APPOL",
-  "short_name": "APPOL",
+  "name": "CodiGuàrdia",
+  "short_name": "CodiGuàrdia",
   "description": "Consulta penal, policial, trànsit i civisme",
   "lang": "ca",
   "start_url": "./",
